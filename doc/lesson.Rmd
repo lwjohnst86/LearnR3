@@ -37,6 +37,29 @@ user_1_info_data <- vroom(
     ),
     .name_repair = snakecase::to_snake_case,
 )
+```
 
+## Importing larger data
+
+```{r}
+user_1_rr_file <- here("data-raw/mmash/user_1/RR.csv")
+user_1_rr_data_prep <- vroom(
+    user_1_rr_file,
+    col_select = -1,
+    .name_repair = snakecase::to_snake_case,
+    n_max = 100
+)
+spec(user_1_rr_data_prep)
+
+user_1_rr_data <- vroom(
+    user_1_rr_file,
+    col_select = -1,
+    col_types = cols(
+        ibi_s = col_double(),
+        day = col_double(),
+        time = col_time(format = "")
+    ),
+    .name_repair = snakecase::to_snake_case
+)
 ```
 
