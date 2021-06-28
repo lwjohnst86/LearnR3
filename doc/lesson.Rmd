@@ -1,11 +1,13 @@
 ---
-title: "Draft R Markdown document"
-author: "Your Name"
+title: "Fun times with R :)"
+author: "Luke Johnston"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(vroom)
+library(here)
 ```
 
 ```{r}
