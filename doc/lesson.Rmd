@@ -249,7 +249,16 @@ summarised_actigraph_df <- actigraph_df %>%
 summarised_actigraph_df
 ```
 
+## Using regex for user ID
+
+```{r}
+user_info_df %>% 
+    mutate(user_id = str_extract(
+        file_path_id,
+        "user_[1-9][0-9]?"
+    )) %>% 
+    select(-file_path_id)
+```
 
 
-
-
+"user_[1-9][0-9]?"
