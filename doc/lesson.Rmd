@@ -10,255 +10,41 @@ options(dplyr.summarise.inform = FALSE)
 library(tidyverse)
 library(vroom)
 library(here)
-library(purrr)
 library(fs)
 source(here("R/functions.R"))
 ```
 
-## Importing raw data
-
-```{r}
-user_1_file <- here("data-raw/mmash/user_1/user_info.csv")
-user_1_data <- vroom(user_1_file)
-spec(user_1_data)
-```
-
-```{r}
-user_1_info_data <- vroom(
-    user_1_file,
-    col_select = -1,
-    .name_repair = snakecase::to_snake_case,
+```{r importing-data}
+user_info_df <- import_multiple_files(
+    "user_info.csv",
+    import_user_info
 )
-spec(user_1_data)
-
-user_1_info_data <- vroom(
-    user_1_file,
-    col_select = -1,
-    col_types = cols(
-        gender = col_character(),
-        weight = col_double(),
-        height = col_double(),
-        age = col_double()
-    ),
-    .name_repair = snakecase::to_snake_case,
+saliva_df <- import_multiple_files(
+    "saliva.csv",
+    import_saliva
 )
-```
-## Exercise for saliva
-
-```{r}
-user_1_saliva_file <- here("data-raw/mmash/user_1/saliva.csv")
-user_1_saliva_data_prep <- vroom(
-    user_1_saliva_file,
-    col_select = -1,
-    .name_repair = snakecase::to_snake_case
+rr_df <- import_multiple_files(
+    "RR.csv",
+    import_rr
+)
+actigraph_df <- import_multiple_files(
+    "Actigraph.csv",
+    import_actigraph
 )
 
-spec(user_1_saliva_data_prep)
-
-user_1_saliva_data <- vroom(
-    user_1_saliva_file,
-    col_select = -1,
-    col_types = cols(
-        samples = col_character(),
-        cortisol_norm = col_double(),
-        melatonin_norm = col_double()  
-    ), 
-    .name_repair = snakecase::to_snake_case
-)
-```
-
-
-## Importing larger data
-
-```{r}
-user_1_rr_file <- here("data-raw/mmash/user_1/RR.csv")
-user_1_rr_data_prep <- vroom(
-    user_1_rr_file,
-    col_select = -1,
-    .name_repair = snakecase::to_snake_case,
-    n_max = 100
-)
-spec(user_1_rr_data_prep)
-
-user_1_rr_data <- vroom(
-    user_1_rr_file,
-    col_select = -1,
-    col_types = cols(
-        ibi_s = col_double(),
-        day = col_double(),
-        time = col_time(format = "")
-    ),
-    .name_repair = snakecase::to_snake_case
-)
-```
-
-## Exercise for actigraph
-
-```{r}
-
-# Use first 100 or so lines to get spec
-user_1_actigraph_file <- here("data-raw/mmash/user_1/Actigraph.csv")
-user_1_actigraph_data_prep <- vroom(
-    user_1_actigraph_file,
-    n_max = 100,
-    col_select = -1,
-    .name_repair = snakecase::to_snake_case
-)
-spec(user_1_actigraph_data_prep)
-
-user_1_actigraph_data <- vroom(
-    user_1_actigraph_file,
-    col_select = -1,
-    col_types = cols(
-        axis_1 = col_double(),
-        axis_2 = col_double(),
-        axis_3 = col_double(),
-        steps = col_double(),
-        hr = col_double(),
-        inclinometer_off = col_double(),
-        inclinometer_standing = col_double(),
-        inclinometer_sitting = col_double(),
-        inclinometer_lying = col_double(),
-        vector_magnitude = col_double(),
-        day = col_double(),
-        time = col_time(format = "")
-    ),
-    .name_repair = snakecase::to_snake_case
-)
-```
-
-## Making a function
-```{r}
-#' Add two numbers together.
-#'
-#' @param num1 A number here.
-#' @param num2 A number here.
-#'
-#' @return Returns the sum of two numbers.
-#'
-add_numbers <- function(num1, num2){
-    added <- num1 + num2
-    return(added)
-}
-
-add_numbers(1, 2)
-
-import_user_info(here("data-raw/mmash/user_1/user_info.csv"))
-import_user_info(here("data-raw/mmash/user_2/user_info.csv"))
-
-```
-
-## Using map
-
-```{r}
-user_info_file <- dir_ls(here("data-raw/mmash/"),
-                         regexp = "user_info.csv",
-                         recurse = TRUE)
-user_info_file
-```
-
-```{r}
-user_info_list <- map(user_info_file, import_user_info)
-
-user_info_list
-```
-```{r}
-user_info_list <- map_dfr(user_info_file, import_user_info, .id = "file_path_id")
-
-user_info_list
-```
-
-```{r}
-
-user_info_df <- import_multiple_files("user_info.csv", import_user_info)
-# Try on saliva
-saliva_df <- import_multiple_files("saliva.csv", import_saliva)
-
-# Try on RR
-rr_df <- import_multiple_files("RR.csv", import_rr)
-
-# And actigraph
-actigraph_df <- import_multiple_files("Actigraph.csv", import_actigraph)
-```
-
-
-```{r}
-user_info_df
-
-user_info_df %>% 
-    select(where(is.character))
-
-```
-
-```{r}
-saliva_df <- import_multiple_files("saliva.csv", import_saliva)
-
-saliva_df
-
-saliva_df %>% 
-    summarise(cortisol_mean = mean(cortisol_norm))
-
-saliva_df %>%
-    summarise(cortisol_mean = mean(cortisol_norm),
-              melatonin_mean = mean(melatonin_norm))
-
-?across
-```
-
-
-```{r}
-saliva_df %>% 
-    summarise(across(cortisol_norm, mean))
-
-saliva_df %>% 
-    summarise(across(c(cortisol_norm, melatonin_norm), mean))
-
-saliva_df %>% 
-    summarise(across(where(is.numeric),
-                     list(mean = mean, sd = sd)))
-
-
-```
-
-```{r}
-rr_df <- import_multiple_files("RR.csv", import_rr)
-
-rr_df %>% 
-    group_by(file_path_id, day) %>% 
-    summarise(across(ibi_s, list(mean = mean), na.rm = TRUE))
-
-
-summarised_rr_df <- rr_df %>%
-    group_by(file_path_id, day) %>%
-    summarise(across(ibi_s, list(mean = mean, sd = sd, sum = sum), na.rm = TRUE)) %>% 
+summarised_rr_df <- rr_df %>% 
+    group_by(user_id, day) %>% 
+    summarise(across(ibi_s, 
+                     list(mean = mean, sd = sd),
+                     na.rm = TRUE)) %>% 
     ungroup()
 
-summarised_rr_df
-```
-
-```{r}
-actigraph_df <- import_multiple_files("Actigraph.csv", import_actigraph)
-actigraph_df
-
-summarised_actigraph_df <- actigraph_df %>%
-    group_by(file_path_id, day) %>%
-    select(where(is.numeric)) %>%
-    summarise(across(everything(), list(mean = mean, sd = sd), na.rm = T)) %>%
-    ungroup()
-
-summarised_actigraph_df
-```
-
-## Using regex for user ID
-
-```{r}
-user_info_df %>% 
-    mutate(user_id = str_extract(
-        file_path_id,
-        "user_[1-9][0-9]?"
+summarised_actigraph_df <- actigraph_df %>% 
+    group_by(user_id, day) %>% 
+    summarise(across(
+        hr, list(mean = mean, sd = sd), 
+        na.rm = TRUE
     )) %>% 
-    select(-file_path_id)
+    ungroup()
 ```
 
-
-"user_[1-9][0-9]?"
