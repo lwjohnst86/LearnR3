@@ -166,4 +166,15 @@ user_info_list <- map_dfr(user_info_file, import_user_info, .id = "file_path_id"
 user_info_list
 ```
 
+```{r}
+
+# Try on saliva
+saliva_df <- import_multiple_files("saliva.csv", import_saliva)
+
+# Try on RR
+rr_df <- import_multiple_files("RR.csv", import_rr)
+
+# And actigraph
+actigraph_df <- import_multiple_files("Actigraph.csv", import_actigraph)
+```
 

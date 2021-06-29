@@ -89,3 +89,20 @@ import_actigraph <- function(file_path) {
     )
     return(actigraph_data)
 }
+
+#' Import multiple MMASH data files and merge into one data frame.
+#'
+#' @param file_pattern Pattern for which data file to import.
+#' @param import_function Function to import the data file.
+#'
+#' @return A single data frame/tibble.
+#'
+import_multiple_files <- function(file_pattern, import_function) {
+    data_files <- fs::dir_ls(here::here("data-raw/mmash/"),
+                             regexp = file_pattern,
+                             recurse = TRUE)
+
+    combined_data <- purrr::map_dfr(data_files, import_function,
+                                    .id = "file_path_id")
+    return(combined_data)
+}
