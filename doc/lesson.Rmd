@@ -8,6 +8,8 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(vroom)
 library(here)
+library(purrr)
+library(fs)
 source(here("R/functions.R"))
 ```
 
@@ -144,5 +146,24 @@ import_user_info(here("data-raw/mmash/user_2/user_info.csv"))
 
 ```
 
+## Using map
+
+```{r}
+user_info_file <- dir_ls(here("data-raw/mmash/"),
+                         regexp = "user_info.csv",
+                         recurse = TRUE)
+user_info_file
+```
+
+```{r}
+user_info_list <- map(user_info_file, import_user_info)
+
+user_info_list
+```
+```{r}
+user_info_list <- map_dfr(user_info_file, import_user_info, .id = "file_path_id")
+
+user_info_list
+```
 
 
