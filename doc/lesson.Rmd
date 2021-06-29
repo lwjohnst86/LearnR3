@@ -6,6 +6,8 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+options(dplyr.summarise.inform = FALSE)
+library(tidyverse)
 library(vroom)
 library(here)
 library(purrr)
@@ -168,6 +170,7 @@ user_info_list
 
 ```{r}
 
+user_info_df <- import_multiple_files("user_info.csv", import_user_info)
 # Try on saliva
 saliva_df <- import_multiple_files("saliva.csv", import_saliva)
 
@@ -177,4 +180,76 @@ rr_df <- import_multiple_files("RR.csv", import_rr)
 # And actigraph
 actigraph_df <- import_multiple_files("Actigraph.csv", import_actigraph)
 ```
+
+
+```{r}
+user_info_df
+
+user_info_df %>% 
+    select(where(is.character))
+
+```
+
+```{r}
+saliva_df <- import_multiple_files("saliva.csv", import_saliva)
+
+saliva_df
+
+saliva_df %>% 
+    summarise(cortisol_mean = mean(cortisol_norm))
+
+saliva_df %>%
+    summarise(cortisol_mean = mean(cortisol_norm),
+              melatonin_mean = mean(melatonin_norm))
+
+?across
+```
+
+
+```{r}
+saliva_df %>% 
+    summarise(across(cortisol_norm, mean))
+
+saliva_df %>% 
+    summarise(across(c(cortisol_norm, melatonin_norm), mean))
+
+saliva_df %>% 
+    summarise(across(where(is.numeric),
+                     list(mean = mean, sd = sd)))
+
+
+```
+
+```{r}
+rr_df <- import_multiple_files("RR.csv", import_rr)
+
+rr_df %>% 
+    group_by(file_path_id, day) %>% 
+    summarise(across(ibi_s, list(mean = mean), na.rm = TRUE))
+
+
+summarised_rr_df <- rr_df %>%
+    group_by(file_path_id, day) %>%
+    summarise(across(ibi_s, list(mean = mean, sd = sd, sum = sum), na.rm = TRUE)) %>% 
+    ungroup()
+
+summarised_rr_df
+```
+
+```{r}
+actigraph_df <- import_multiple_files("Actigraph.csv", import_actigraph)
+actigraph_df
+
+summarised_actigraph_df <- actigraph_df %>%
+    group_by(file_path_id, day) %>%
+    select(where(is.numeric)) %>%
+    summarise(across(everything(), list(mean = mean, sd = sd), na.rm = T)) %>%
+    ungroup()
+
+summarised_actigraph_df
+```
+
+
+
+
 
